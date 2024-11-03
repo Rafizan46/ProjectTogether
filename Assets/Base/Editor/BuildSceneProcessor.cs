@@ -21,6 +21,17 @@ public class BuildSceneProcessor : AssetModificationProcessor
         return paths;
     }
 
+    public static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath)
+    {
+        string sourceScenePath = ProcessAssetsForScenes(new string[] { sourcePath });
+        if (!string.IsNullOrEmpty(sourceScenePath)) RemoveSceneFromBuildSettings(sourceScenePath);
+
+        string destinationScenePath = ProcessAssetsForScenes(new string[] { destinationPath });
+        if (!string.IsNullOrEmpty(destinationScenePath)) AddSceneToBuildSettings(destinationScenePath);
+
+        return AssetMoveResult.DidNotMove;
+    }
+
     public static AssetDeleteResult OnWillDeleteAsset(string path, RemoveAssetOptions options)
     {
         string scenePath = ProcessAssetsForScenes(new string[] { path });
