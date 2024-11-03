@@ -11,7 +11,11 @@ public class PlayerMovement : MonoBehaviour
 
     public LayerMask groundLayer;
     public Transform groundCheck;
-    public float groundCheckRadius = 0.1f;
+    public float groundCheckRadius;
+
+    public LayerMask wallLayer;
+    public Transform wallCheck;
+    public float wallCheckDistance;
 
     public float moveSpeed;
     public float jumpForce;
@@ -22,6 +26,9 @@ public class PlayerMovement : MonoBehaviour
 
     private float _doubleJumpLeft;
     private bool _isGrounded;
+    private bool _isTouchingWall;
+    private bool _isWallSliding;
+    public float wallSlideSpeed = 2f;
 
     void Start()
     {
@@ -35,7 +42,7 @@ public class PlayerMovement : MonoBehaviour
     {
         HandleMove();
         HandleJump();
-
+        HandleWallSlide();
         HandleVisuals();
     }
 
@@ -60,7 +67,14 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetButtonDown("Jump"))
         {
-            if (_isGrounded) Jump();
+            if (_isGrounded)
+            {
+                Jump();
+            }
+            else if (_isWallSliding)
+            {
+                WallJump();
+            }
             else if (_doubleJumpLeft > 0)
             {
                 _doubleJumpLeft--;
@@ -81,7 +95,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Jump()
     {
-        if(_isGrounded)
+        if (_isGrounded)
         {
             _anim.Play("player_jump");
         }
@@ -94,10 +108,31 @@ public class PlayerMovement : MonoBehaviour
         _rb.gravityScale = defaultGravityScale;
     }
 
+    private void WallJump()
+    {
+        _anim.Play("player_jump");
+        _rb.velocity = new Vector2(_rb.velocity.x, jumpForce);
+        _rb.gravityScale = defaultGravityScale;
+    }
+
+    private void HandleWallSlide()
+    {
+        _isTouchingWall = Physics2D.Raycast(wallCheck.position, Vector2.right, wallCheckDistance, wallLayer) ||
+                            Physics2D.Raycast(wallCheck.position, Vector2.left, wallCheckDistance, wallLayer);
+        _isWallSliding = _isTouchingWall && !_isGrounded && _rb.velocity.y <= 0;
+
+        if (_isWallSliding)
+        {
+            _rb.velocity = new Vector2(_rb.velocity.x, -wallSlideSpeed);
+            _doubleJumpLeft = doubleJumpCount;
+        }
+    }
+
     private void HandleVisuals()
     {
         _anim.SetFloat("h_speed", Mathf.Abs(_rb.velocity.x));
         _anim.SetFloat("v_speed", _rb.velocity.y);
         _anim.SetBool("is_grounded", _isGrounded);
+        _anim.SetBool("is_wall_sliding", _isWallSliding);
     }
 }
