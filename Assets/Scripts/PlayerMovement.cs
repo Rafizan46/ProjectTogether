@@ -125,6 +125,8 @@ public class PlayerMovement : MonoBehaviour
         {
             _rb.velocity = new Vector2(_rb.velocity.x, -wallSlideSpeed);
             _doubleJumpLeft = doubleJumpCount;
+
+            _sr.flipX = Physics2D.Raycast(wallCheck.position, Vector2.left, wallCheckDistance, wallLayer);
         }
     }
 
